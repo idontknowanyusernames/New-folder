@@ -49,7 +49,7 @@ class Store:
                 cost = fruitsamt[fruits.index(fruit)] * price
                 total += cost
 
-        time.sleep(10 / randomemployee.efficiency)
+        time.sleep(3 / randomemployee.efficiency)
         randomemployee.occupied = False
         print("A customer has been helped!")
         return total
