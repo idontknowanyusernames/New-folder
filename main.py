@@ -24,19 +24,19 @@ if playedbefore:
     with open("userdata/employee.csv") as cfile:
         csv_reader = csv.DictReader(cfile)
         for row in csv_reader:
-            elevel = int(row["Level"])
+            elevel = int(row["level"])
             if elevel == 1:
-                effiencyrandomizer = random.random(0.5,1.2)
+                effiencyrandomizer = random.uniform(0.5,1.2)
                 employee = Employee(100, effiencyrandomizer, 1)
                 employeelist.append(employee)
                 budget -= employee.salary
             elif elevel == 2:
-                effiencyrandomizer = random.random(2.7,3.5)
+                effiencyrandomizer = random.uniform(2.7,3.5)
                 employee = Employee(500, effiencyrandomizer, 2)
                 employeelist.append(employee)
                 budget -= employee.salary
             elif elevel == 3:
-                effiencyrandomizer = random.random(9.7,11.3)
+                effiencyrandomizer = random.uniform(9.7,11.3)
                 employee = Employee(2500, effiencyrandomizer, 3)
                 employeelist.append(employee)
                 budget -= employee.salary
@@ -94,51 +94,54 @@ while gamestarted:
             store.inventory.save(store.inventory.products)
 
     
-    elif action == "h":
+    if action == "h":
         
         print("--------------------------------------------")
         task = input("Would you like to (h)ire an employee, (f)ire an employee, or (q)uit?")
         if task == "h":
-            elevel = int(input("Would you like to hire a level 1 ($1000), 2 ($5000), or 3 ($25000) employee?"))
+            elevel = int(input("Would you like to hire a level 1 ($100), 2 ($500), or 3 ($2500) employee?"))
             if elevel == 1:
-                effiencyrandomizer = random.random(0.5,1.2)
+                effiencyrandomizer = random.uniform(0.5,1.2)
                 employee = Employee(100, effiencyrandomizer, 1)
                 employeelist.append(employee)
                 budget -= employee.salary
             elif elevel == 2:
-                effiencyrandomizer = random.random(2.7,3.5)
+                effiencyrandomizer = random.uniform(2.7,3.5)
                 employee = Employee(500, effiencyrandomizer, 2)
                 employeelist.append(employee)
                 budget -= employee.salary
             elif elevel == 3:
-                effiencyrandomizer = random.random(9.7,11.3)
+                effiencyrandomizer = random.uniform(9.7,11.3)
                 employee = Employee(2500, effiencyrandomizer, 3)
                 employeelist.append(employee)
                 budget -= employee.salary
         elif task == "f":
             for employee in employeelist:
                 print(employee)
-            tofire = input("Which employee would you like to fire? (0-)" + str(len(employeelist - 1)) + ") or c to cancel")
+            tofire = input("Which employee would you like to fire? (0-" + str(len(employeelist)- 1) + ") or c to cancel")
             if tofire == "c":
                 pass
             else:
                 tofire = int(tofire)
                 del employeelist[tofire]
 
-    elif action == "o":
+    if action == "o":
         for i in range (0,4):
             customer = Customer()
             customer_list.append(customer)
         for customer in customer_list:
             customer.add_cart()
         for customer in customer_list:
-            idek = customer.checkout(customer)
+            idek = store.checkout(customer)
             if idek == True:
                 del customer_list[customer_list.index(customer)]
             else:
                 budget += idek
+        for employee in employeelist:
+            budget -= employee.salary
 
 
 
-    elif action == "q":
+    if action == "q":
         store.save(store.inventory.products)
+    

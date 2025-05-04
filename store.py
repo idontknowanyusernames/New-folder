@@ -1,15 +1,15 @@
 import csv, random, time
 
 class Store:
-    def __init__(self, inventory, employeelist, budget):
+    def __init__(self, inventory, employeelist):
         self.inventory = inventory
         self.employees = employeelist
-        self.budget = budget
+        self.budget = 1000
     
     def save(self, data):
         with open("userdata/budget.txt", "w") as tfile:
-            print(self.budget, file=tfile)
-        with open("userdata/employees.csv", "w") as cfile:
+            print(self.budget, end = "", file=tfile)
+        with open("userdata/employee.csv", "w") as cfile:
             fieldnames = ["level"]
             writer = csv.DictWriter(cfile, fieldnames=fieldnames)
             writer.writeheader()
@@ -38,8 +38,10 @@ class Store:
         
         for fruit, qty in customer.cart:
             if fruit not in fruits:
+                print("A customer has left!")
                 return True
             elif qty > fruitsamt(fruits.index(fruit)):
+                print("A customer has left!")
                 return True
             else:
                 fruitindex = fruit_options.index(fruit)
@@ -49,6 +51,7 @@ class Store:
 
         time.sleep(10 / randomemployee.efficiency)
         randomemployee.occupied = False
+        print("A customer has been helped!")
         return total
         
             
