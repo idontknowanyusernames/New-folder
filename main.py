@@ -1,4 +1,4 @@
-import json, csv, random
+import json, csv, random, threading, queue
 from product import Product, PerishableProduct
 from inventory import Inventory
 from store import Store
@@ -131,6 +131,13 @@ while gamestarted:
             customer_list.append(customer)
         for customer in customer_list:
             customer.add_cart()
+        for customer in customer_list:
+            idek = customer.checkout(customer)
+            if idek == True:
+                del customer_list[customer_list.index(customer)]
+            else:
+                budget += idek
+
 
 
     elif action == "q":
