@@ -1,11 +1,52 @@
 import json, csv, random, threading, queue
+import pygame
 from product import Product, PerishableProduct
 from inventory import Inventory
 from store import Store
 from employee import Employee
 from customer import Customer
+
+def start_screen():
+    pygame.init()
+    screen = pygame.display.set_mode((1000, 600))  
+    pygame.display.set_caption("Store Simulation Start Screen")
+    
+    start = pygame.image.load("gamedata/assets/start.png")
+    start = pygame.transform.scale(start, (1000, 600))  # Resize if needed
+
+    start_button = pygame.image.load("gamedata/assets/start_button.png")
+    start_button = pygame.transform.scale(start_button, (200, 80))
+
+    button_rect = start_button.get_rect(center=(700, 450))
+
+    screen.blit(start, (0, 0))
+    screen.blit(start_button, button_rect)
+    pygame.display.flip()
+
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button_rect.collidepoint(event.pos):
+                    waiting = False
+
+    register_screen = pygame.image.load("gamedata/assets/register.png")
+    register_screen = pygame.transform.scale(register_screen, (1000, 600))
+    screen.blit(register_screen, (0, 0))
+    pygame.display.flip()
+
+    pygame.time.wait(1500)
+    
+
 budget = 2000
 playedbefore = input("Have you played before? (y/n)     ") == "y"
+
+start_screen()
+
 products_list = []
 employeelist = []
 customer_list = []
