@@ -169,15 +169,18 @@ while gamestarted:
             store.budget -= price * amount
             store.inventory.display_inventory()
             print(f"You currently have ${store.budget}")
+            current_bg = "r"
 
         elif task == "r":
             store.inventory.save(store.inventory.products)
             index = int(get_user_input(screen, font, "Enter the index to delete (start at 1): ", store.budget, current_bg)) - 1
             store.inventory.remove_product(index)
             store.inventory.display_inventory()
+            current_bg = "r"
 
         elif task == "v":
             store.inventory.display_inventory()
+            current_bg = "r"
 
         elif task == "q":
             store.inventory.save(store.inventory.products)
