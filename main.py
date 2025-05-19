@@ -6,52 +6,110 @@ from store import Store
 from employee import Employee
 from customer import Customer
 
-def start_screen():
-    pygame.init()
-    screen = pygame.display.set_mode((1000, 600))  
-    pygame.display.set_caption("Store Simulation Start Screen")
-    
-    start = pygame.image.load("gamedata/assets/start.png")
-    start = pygame.transform.scale(start, (1000, 600))  # Resize if needed
 
+class TextInputBox:
+    def __init__(self, x, y, w, h, font, prompt=""):
+        self.rect = pygame.Rect(x, y, w, h)
+        self.color = pygame.Color("black")
+        self.text = ""
+        self.font = font
+        self.active = True
+        self.prompt = prompt
+
+    def handle_event(self, event):
+        if event.type == pygame.KEYDOWN and self.active:
+            if event.key == pygame.K_RETURN:
+                return self.text
+            elif event.key == pygame.K_BACKSPACE:
+                self.text = self.text[:-1]
+            else:
+                self.text += event.unicode
+        return None
+
+    def draw(self, screen):
+        txt_surface = self.font.render(f"{self.prompt}{self.text}", True, self.color)
+        screen.blit(txt_surface, (self.rect.x + 5, self.rect.y + 5))
+        pygame.draw.rect(screen, self.color, self.rect, 2)
+
+
+def draw_start_screen(screen, font):
+    start_image = pygame.image.load("gamedata/assets/start.png")
+    start_image = pygame.transform.scale(start_image, (1000, 600))
+    screen.blit(start_image, (0, 0))
     start_button = pygame.image.load("gamedata/assets/start_button.png")
-    start_button = pygame.transform.scale(start_button, (200, 80))
-
-    button_rect = start_button.get_rect(center=(700, 450))
-
-    screen.blit(start, (0, 0))
-    screen.blit(start_button, button_rect)
+    start_button = pygame.transform.scale(start_button, (400, 160))
+    start_button_rect = start_button.get_rect(center=(800, 450))
+    screen.blit(start_button, start_button_rect)
     pygame.display.flip()
+    return start_button_rect
 
-    waiting = True
-    while waiting:
+
+def show_register_screen(screen):
+    register_image = pygame.image.load("gamedata/assets/register.png")
+    register_image = pygame.transform.scale(register_image, (1000, 600))
+    screen.blit(register_image, (0, 0))
+    pygame.display.flip()
+    pygame.time.delay(2000)  
+
+
+def get_user_input(screen, font, prompt, budget, current_bg):
+    input_box = TextInputBox(100, 100, 600, 50, font, prompt)
+    clock = pygame.time.Clock()
+    while True:
+        if current_bg == "r":
+            register_image = pygame.image.load("gamedata/assets/register.png")
+            register_image = pygame.transform.scale(register_image, (1000, 600))
+            screen.blit(register_image, (0, 0))
+        elif current_bg == "i":
+            inventory_image = pygame.image.load("gamedata/assets/shop.png")
+            inventory_image = pygame.transform.scale(inventory_image, (1000, 600))
+            screen.blit(inventory_image, (0, 0))
+        
+        budget_text = font.render(f"Budget: ${budget:.2f}", True, pygame.Color("black"))
+        screen.blit(budget_text, (50, 20))
+        pygame.display.flip()
+
+        input_box.draw(screen)
+        pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
+            result = input_box.handle_event(event)
+            if result is not None:
+                return result
+        clock.tick(30)
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if button_rect.collidepoint(event.pos):
-                    waiting = False
 
-    register_screen = pygame.image.load("gamedata/assets/register.png")
-    register_screen = pygame.transform.scale(register_screen, (1000, 600))
-    screen.blit(register_screen, (0, 0))
-    pygame.display.flip()
+pygame.init()
+screen = pygame.display.set_mode((1000, 600))
+pygame.display.set_caption("Fruit Store Simulation")
+font = pygame.font.SysFont(None, 36)
 
-    pygame.time.wait(1500)
-    
 
+start_button_rect = draw_start_screen(screen, font)
+waiting = True
+while waiting:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            exit()
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if start_button_rect.collidepoint(event.pos):
+                show_register_screen(screen)
+                waiting = False
+                break
+
+
+current_bg = "r"
 budget = 2000
-playedbefore = input("Have you played before? (y/n)     ") == "y"
-
-start_screen()
-
+playedbefore = get_user_input(screen, font, "Have you played before? (y/n): ", budget, current_bg).lower() == "y"
 products_list = []
 employeelist = []
 customer_list = []
+
 if playedbefore:
-    with open ("userdata/inventory.json") as file:
+    with open("userdata/inventory.json") as file:
         products = json.load(file)
         for product in products:
             if len(product) == 4:
@@ -59,41 +117,35 @@ if playedbefore:
             else:
                 product = Product(product[0], product[1], product[2])
             products_list.append(product)
+
     with open("userdata/budget.txt") as txtfile:
-        budget = txtfile.read()
-        budget = float(budget)
+        budget = float(txtfile.read())
+
     with open("userdata/employee.csv") as cfile:
         csv_reader = csv.DictReader(cfile)
         for row in csv_reader:
             elevel = int(row["level"])
-            if elevel == 1:
-                effiencyrandomizer = random.uniform(0.5,1.2)
-                employee = Employee(1000, effiencyrandomizer, 1)
-                employeelist.append(employee)
-            elif elevel == 2:
-                effiencyrandomizer = random.uniform(2.7,3.5)
-                employee = Employee(5000, effiencyrandomizer, 2)
-                employeelist.append(employee)
-            elif elevel == 3:
-                effiencyrandomizer = random.uniform(9.7,11.3)
-                employee = Employee(25000, effiencyrandomizer, 3)
-                employeelist.append(employee)
+            eff = random.uniform({1: 0.5, 2: 2.7, 3: 9.7}[elevel], {1: 1.2, 2: 3.5, 3: 11.3}[elevel])
+            salary = {1: 100, 2: 500, 3: 2500}[elevel]
+            employee = Employee(salary, eff, elevel)
+            employeelist.append(employee)
 
 
-today = input("What is today's date? (mm/dd/yy)     ")
+today = get_user_input(screen, font, "What is today's date? (mm/dd/yy): ", budget, current_bg)
 print("Welcome to the store simulation!")
 gamestarted = True
 inventory = Inventory(products_list, today)
 store = Store(inventory, employeelist)
 store.budget = budget
+
 while gamestarted:
     store.save(store.inventory.products)
-    action = input("Would you like to open your (i)nventory, (h)ire a new employee, (o)pen up the store, or (q)uit?").lower()
-    
+    action = get_user_input(screen, font, "(i)nventory, (h)ire, (o)pen, (q)uit: ", store.budget, current_bg).lower()
+
     if action == "i":
-        print("--------------------------------------------")
-        task = input("Would you like to (b)uy a product, (r)emove a product, (v)iew your inventory, or (q)uit?")
-        if task.lower() == "b":
+        current_bg = "i"
+        task = get_user_input(screen, font, "(b)uy, (r)emove, (v)iew, (q)uit: ", store.budget, current_bg).lower()
+        if task == "b":
             store.inventory.save(inventory.products)
             with open("gamedata/products.csv") as file:
                 fruit_options = []
@@ -102,90 +154,73 @@ while gamestarted:
                 for row in csv_reader:
                     fruit_options.append(row["name"])
                     fruit_prices.append(row["price"])
-            for i in range (0, len(fruit_options)):
-                print(fruit_options[i], fruit_prices[i], sep = ":")
-            name_index = int(input("Which product would you like to buy? (0-" + str(len(fruit_options) - 1) + ")     "))
+
+            for i in range(len(fruit_options)):
+                print(f"{i}: {fruit_options[i]} - ${fruit_prices[i]}")
+
+            name_index = int(get_user_input(screen, font, "Which product? Index: ", store.budget, current_bg))
             name = fruit_options[name_index]
-            amount = int(input("How many would you like to buy?   "))
-            price = fruit_prices[name_index]
-            perishable = True
-            if perishable:
-                expiration_date = input("When does it expire? (mm/dd/yy)   ")
-                month, day, year = expiration_date.split("/")
-                perishableproduct = PerishableProduct(name, amount, price, (month, day, year))
-                store.inventory.add_product(perishableproduct)
-            else:
-                product = Product(name, amount, price)
-                store.inventory.add_product(product)
-            
-            store.budget -= float(price) * amount
+            amount = int(get_user_input(screen, font, "How many? ", store.budget, current_bg))
+            price = float(fruit_prices[name_index])
+            expiration_date = get_user_input(screen, font, "When does it expire? (mm/dd/yy): ", store.budget, current_bg)
+            month, day, year = expiration_date.split("/")
+            perishableproduct = PerishableProduct(name, amount, price, (month, day, year))
+            store.inventory.add_product(perishableproduct)
+            store.budget -= price * amount
             store.inventory.display_inventory()
-            print("You currently have $" + str(store.budget))
-        elif task.lower() == "r":
-            store.inventory.save(store.inventory.products)
-            index = int(input("Enter the index of the item you want to delete (first index is 1):   "))
-            store.inventory.remove_product(index - 1)
-            store.inventory.display_inventory()
-        elif task.lower() == "v":
-            store.inventory.display_inventory()
-        elif task.lower() == "q":
-            store.inventory.save(store.inventory.products)
+            print(f"You currently have ${store.budget}")
 
-    
-    if action == "h":
-        
-        print("--------------------------------------------")
-        task = input("Would you like to (h)ire an employee, (f)ire an employee, or (q)uit?")
+        elif task == "r":
+            store.inventory.save(store.inventory.products)
+            index = int(get_user_input(screen, font, "Enter the index to delete (start at 1): ", store.budget, current_bg)) - 1
+            store.inventory.remove_product(index)
+            store.inventory.display_inventory()
+
+        elif task == "v":
+            store.inventory.display_inventory()
+
+        elif task == "q":
+            store.inventory.save(store.inventory.products)
+            current_bg = "r"
+
+    elif action == "h":
+        task = get_user_input(screen, font, "(h)ire, (f)ire, or (q)uit: ", store.budget, current_bg)
         if task == "h":
-            elevel = int(input("Would you like to hire a level 1 ($100), 2 ($500), or 3 ($2500) employee?"))
-            if elevel == 1:
-                effiencyrandomizer = random.uniform(0.5,1.2)
-                employee = Employee(1000, effiencyrandomizer, 1)
-                employeelist.append(employee)
-                budget -= employee.salary
-            elif elevel == 2:
-                effiencyrandomizer = random.uniform(2.7,3.5)
-                employee = Employee(5000, effiencyrandomizer, 2)
-                employeelist.append(employee)
-                budget -= employee.salary
-            elif elevel == 3:
-                effiencyrandomizer = random.uniform(9.7,11.3)
-                employee = Employee(25000, effiencyrandomizer, 3)
-                employeelist.append(employee)
-                budget -= employee.salary
-        elif task == "f":
-            for employee in employeelist:
-                print(employee)
-            tofire = input("Which employee would you like to fire? (0-" + str(len(employeelist)- 1) + ") or c to cancel")
-            if tofire == "c":
-                pass
-            else:
-                tofire = int(tofire)
-                del employeelist[tofire]
+            elevel = int(get_user_input(screen, font, "Hire level 1 ($1000), 2 ($5000), 3 ($25000): ", store.budget, current_bg))
+            eff = random.uniform({1: 0.5, 2: 2.7, 3: 9.7}[elevel], {1: 1.2, 2: 3.5, 3: 11.3}[elevel])
+            salary = {1: 100, 2: 500, 3: 2500}[elevel]
+            employee = Employee(salary, eff, elevel)
+            employeelist.append(employee)
+            store.budget -= salary
 
-    if action == "o":
-        for i in range (0,15):
+        elif task == "f":
+            for idx, employee in enumerate(employeelist):
+                print(f"{idx}: {employee}")
+            tofire = get_user_input(screen, font, "Index to fire or 'c' to cancel: ", store.budget, current_bg)
+            if tofire != "c":
+                del employeelist[int(tofire)]
+
+    elif action == "o":
+        for _ in range(15):
             customer = Customer()
             customer_list.append(customer)
         for customer in customer_list:
             customer.add_cart()
         print("Helping customers!")
         for customer in customer_list:
-            idek = store.checkout(customer)
-            if idek == True:
-                del customer_list[customer_list.index(customer)]
+            result = store.checkout(customer)
+            if result is True:
+                customer_list.remove(customer)
             else:
-                budget += idek
+                budget += result
         for employee in employeelist:
             store.budget -= employee.salary
-    print("Your budget is $" + str(store.budget))
+        print(f"Your budget is ${store.budget}")
 
-
-    if action == "q":
+    elif action == "q":
         store.save(store.inventory.products)
         break
-    
+
     if store.budget < 0:
-        print("you had $" + str(store.budget))
-        print("you went poor")
+        print(f"you had ${store.budget}\nyou went poor")
         break
